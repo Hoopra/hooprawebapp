@@ -1,0 +1,59 @@
+version: '2'
+services:
+  api:
+    build:
+      context: ${BASE_DIR}
+      dockerfile: deploy/dev/api/Dockerfile
+    ports:
+    - '8000:8000'
+    volumes:
+    - ${BASE_DIR}/api:/go/src/github.com/hoopra/api
+    environment:
+      - ENVIRONMENT=${ENV}
+    # logging:
+    #   driver: 'json-file'
+    #   options:
+    #     max-size: '200K'
+    #     max-file: '5'
+    # links:
+    # - redis
+    # - db
+    # depends_on:
+    # - db
+  client:
+    build:
+      context: ${BASE_DIR}
+      dockerfile: deploy/dev/client/Dockerfile
+    ports:
+    - '3000:3000'
+    volumes:
+    - ${BASE_DIR}/client:/src/client
+    environment:
+      - ENVIRONMENT=${ENV}
+  # db:
+  #   build: db
+  #   ports:
+  #     - '3306:3306'
+    # volumes:
+    #   - db-volume:/var/lib/mysql
+  # db-upgrade:
+  #   build: db-upgrade
+  #   links:
+  #     - db
+  #   volumes:
+  #     - ${BASE_DIR}/:/opt/actimo/main
+  # haproxy:
+  #   build: haproxy
+  #   links:
+  #     - api
+  #     - ui
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  # redis:
+  #   image: redis:3.2.1
+  #   ports:
+  #     - '6379:6379'
+
+volumes:
+  db-volume:
