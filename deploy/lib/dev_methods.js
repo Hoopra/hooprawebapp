@@ -15,8 +15,6 @@ if (BASE_DIR_POSIX.indexOf(':')) {
 
 process.env.BASE_DIR = BASE_DIR;
 process.env.BASE_DIR_POSIX = BASE_DIR_POSIX;
-console.log(BASE_DIR, typeof BASE_DIR);
-console.log(BASE_DIR_POSIX, typeof BASE_DIR);
 
 function copyFile(source, destination) {
   if (!fs.existsSync(destination)) {
@@ -53,4 +51,30 @@ function deleteFile(path) {
   }
 }
 
-module.exports = { BASE_DIR, createDirectory, deleteFile, executeCommand, copyFile };
+function getArguments(process) {
+  const args = process.argv.slice(2);
+  const splitArgs = [];
+  args.forEach((e) => {
+    if (e.includes('=')) {
+      splitArgs.push(...e.split('='));
+    } else {
+      splitArgs.push(e);
+    }
+  });
+  if (splitArgs.length % 2 !== 0) {
+    throw new Error('Invalid arguments');
+  }
+  const mapped = {};
+  let currentKey = null;
+  splitArgs.forEach((e) => {
+    if (currentKey) {
+      mapped[currentKey] = e;
+      currentKey = null;
+    } else {
+      currentKey = e.replace(/-/g, '');
+    }
+  });
+  return mapped;
+}
+
+module.exports = { BASE_DIR, createDirectory, deleteFile, executeCommand, copyFile, getArguments };

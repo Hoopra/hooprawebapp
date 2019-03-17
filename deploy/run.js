@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
-const { BASE_DIR, createDirectory, executeCommand } = require('./lib/dev_methods');
+const { BASE_DIR, createDirectory, executeCommand, getArguments } = require('./lib/dev_methods');
 
-const args = process.argv.slice(2);
+const args = getArguments(process);
 
-console.log(args);
+process.env.ENV = args.env || args.e || 'dev';
 
-// console.log('create log directory if not present');
-// createDirectory(`${BASE_DIR}/log`);
+console.log('create log directory if not present');
+createDirectory(`${BASE_DIR}/log`);
 
 // if (args.includes('build')) {
 //   console.log('build dev stack');
@@ -21,6 +21,6 @@ console.log(args);
 //     `, BASE_DIR);
 // }
 
-// console.log('run dev stack');
-executeCommand('docker-compose build', `${BASE_DIR}/deploy/dev`);
+console.log(`run ${process.env.ENV} stack`);
+// executeCommand('docker-compose build', `${BASE_DIR}/deploy/dev`);
 executeCommand('docker-compose up', `${BASE_DIR}/deploy/dev`);

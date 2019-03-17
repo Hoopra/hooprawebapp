@@ -3,9 +3,9 @@ package controllers
 import (
 	"net/http"
 
-	auth "github.com/hoopra/api/authorization"
-	"github.com/hoopra/api/datastore"
-	"github.com/hoopra/api/models"
+	auth "hoopraapi/authorization"
+	"hoopraapi/datastore"
+	"hoopraapi/models"
 )
 
 // UpdateName changes the name of a user in the datastore
@@ -26,9 +26,13 @@ func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc)
 		return
 	}
 
-	id := auth.GetUUIDFromToken(token)
+	id, err := auth.GetIDFromToken(token)
+	if err != nil {
+		responder.RespondWithError(err)
+		return
+	}
 
-	err = datastore.Store().Users().UpdateName(id, user.Username)
+	err = datastore.Users().UpdateName(id, user.Username)
 
 	if err != nil {
 		responder.RespondWithError(err)
@@ -56,9 +60,13 @@ func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerF
 		return
 	}
 
-	id := auth.GetUUIDFromToken(token)
+	id, err := auth.GetIDFromToken(token)
+	if err != nil {
+		responder.RespondWithError(err)
+		return
+	}
 
-	err = datastore.Store().Users().UpdatePassword(id, user.Password)
+	err = datastore.Users().UpdatePassword(id, user.Password)
 
 	if err != nil {
 		responder.RespondWithError(err)

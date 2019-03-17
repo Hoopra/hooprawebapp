@@ -2,5 +2,5 @@
   "PrivateKeyPath": "/config/keys/private_key",
   "PublicKeyPath": "/config/keys/public_key.pub",
   "ExpireDelta": 72,
-  "Issuer": "restful-server.com"
+  "Issuer": "hoopra.com"
 }

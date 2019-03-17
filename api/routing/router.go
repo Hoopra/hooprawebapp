@@ -1,9 +1,10 @@
 package routing
 
 import (
-	"github.com/codegangsta/negroni"
+	"hoopraapi/authorization"
+
 	"github.com/gorilla/mux"
-	"github.com/hoopra/api/authorization"
+	negroni "gopkg.in/codegangsta/negroni.v0"
 )
 
 type route struct {
@@ -16,10 +17,10 @@ type route struct {
 
 // GetRouting returns the complete routing
 // for this server
-func GetRouting() *mux.Router {
+func GetRouting() (*mux.Router, *negroni.Negroni) {
 
-	routers := newRouter(Routes)
-	return routers
+	router := newRouter(Routes)
+	return router, negroni.Classic()
 }
 
 func newRouter(routes []route) *mux.Router {
@@ -36,7 +37,6 @@ func newRouter(routes []route) *mux.Router {
 		}
 
 		router.Handle(route.Pattern, handler).Methods(route.Method).Name(route.Name)
-
 	}
 
 	return router

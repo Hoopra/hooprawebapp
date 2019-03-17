@@ -1,17 +1,18 @@
 package authorization
 
 import (
+	"strconv"
 	"time"
 
+	"hoopraapi/config"
+	"hoopraapi/datastore"
+	"hoopraapi/models"
+
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/hoopra/api/config"
-	"github.com/hoopra/api/datastore"
-	"github.com/hoopra/api/models"
-	"github.com/satori/go.uuid"
 )
 
 // IssueJWT returns a JWT signed by this server
-func IssueJWT(uuid uuid.UUID) (string, error) {
+func IssueJWT(id int) (string, error) {
 
 	keyInstance := config.GetJWTKeyPair()
 	token := jwt.New(jwt.SigningMethodRS512)
@@ -19,7 +20,7 @@ func IssueJWT(uuid uuid.UUID) (string, error) {
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(config.Get().ExpireDelta)).Unix()
 	claims["iat"] = time.Now().Unix()
-	claims["sub"] = uuid.String()
+	claims["sub"] = strconv.Itoa(id)
 	claims["iss"] = config.Get().Issuer
 	token.Claims = claims
 
@@ -30,26 +31,25 @@ func IssueJWT(uuid uuid.UUID) (string, error) {
 	return tokenString, nil
 }
 
-// GetUUIDFromToken returns the UUID of the user
+// GetIDFromToken returns the id of the user
 // for which a token was issued
-func GetUUIDFromToken(token *jwt.Token) uuid.UUID {
+func GetIDFromToken(token *jwt.Token) (int, error) {
 
 	claims := token.Claims.(jwt.MapClaims)
 	idString := claims["sub"].(string)
 
-	id, err := uuid.FromString(idString)
+	id, err := strconv.Atoi(idString)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-
-	return id
+	return id, nil
 }
 
 // Authenticate returns true if a user exists
 // in the datastore
 func Authenticate(user *models.User) bool {
 
-	success := datastore.Store().Users().Validate(user)
+	success := datastore.Users().Validate(user)
 	return success
 }
 

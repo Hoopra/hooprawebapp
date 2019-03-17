@@ -1,6 +1,6 @@
 package routing
 
-import "github.com/hoopra/api/controllers"
+import "hoopraapi/controllers"
 
 // Port on which this router should listen
 var Port = ":8000"

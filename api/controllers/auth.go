@@ -4,9 +4,10 @@ import (
 	"errors"
 	"net/http"
 
-	auth "github.com/hoopra/api/authorization"
-	"github.com/hoopra/api/datastore"
-	"github.com/hoopra/api/models"
+	"hoopraapi/datastore"
+	"hoopraapi/models"
+
+	auth "hoopraapi/authorization"
 )
 
 // Register adds a user to the datastore if one
@@ -27,7 +28,7 @@ func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	err = datastore.Store().Users().Add(user)
+	err = datastore.Users().Add(user)
 	if err != nil {
 		responder.RespondWithError(err)
 		return
@@ -53,15 +54,15 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	id, err := datastore.Store().Users().GetUUIDByName(user.Username)
-	if err != nil {
+	u := datastore.Users().SelectByName(user.Username)
+	if u == nil {
 		// responder.RespondWithError(err)
 		responder.RespondWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	if auth.Authenticate(user) {
-		token, err := auth.IssueJWT(id)
+		token, err := auth.IssueJWT(u.ID)
 		responder.RespondWithToken(token, err)
 		return
 	}
@@ -80,7 +81,7 @@ func RefreshToken(w http.ResponseWriter, req *http.Request, next http.HandlerFun
 	// decoder := json.NewDecoder(req.Body)
 	// decoder.Decode(&requestUser)
 
-	token, err := auth.IssueJWT(user.UUID)
+	token, err := auth.IssueJWT(user.ID)
 	if err == nil {
 		responder.RespondWithToken(token, err)
 		return

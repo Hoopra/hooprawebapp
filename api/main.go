@@ -4,9 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/codegangsta/negroni"
-	"github.com/hoopra/api/config"
-	"github.com/hoopra/api/routing"
+	"hoopraapi/config"
+	"hoopraapi/datastore"
+	"hoopraapi/routing"
+
 	"github.com/rs/cors"
 )
 
@@ -15,9 +16,11 @@ func main() {
 	// Configure instance
 	config.Init()
 
+	// Initialize datastore
+	datastore.Init()
+
 	// Create router
-	router := routing.GetRouting()
-	n := negroni.Classic()
+	router, n := routing.GetRouting()
 
 	corsOpts := cors.Options{}
 	corsOpts.AllowCredentials = true

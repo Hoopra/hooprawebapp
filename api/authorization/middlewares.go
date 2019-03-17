@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"hoopraapi/config"
+	"hoopraapi/models"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/hoopra/api/config"
-	"github.com/hoopra/api/models"
 )
 
 // RequireTokenAuthentication ivalidates the JWT of a request

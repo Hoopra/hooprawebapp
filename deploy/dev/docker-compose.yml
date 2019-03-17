@@ -1,5 +1,11 @@
 version: '2'
 services:
+  db:
+    build:
+      context: ${BASE_DIR}/deploy/dev/db
+      # dockerfile: deploy/dev/api/Dockerfile
+    ports:
+    - '5432:5432'
   api:
     build:
       context: ${BASE_DIR}
@@ -7,19 +13,19 @@ services:
     ports:
     - '8000:8000'
     volumes:
-    - ${BASE_DIR}/api:/go/src/github.com/hoopra/api
+    - ${BASE_DIR}/api:/src/api
     environment:
       - ENVIRONMENT=${ENV}
-    # logging:
+    # logging:0
     #   driver: 'json-file'
     #   options:
     #     max-size: '200K'
     #     max-file: '5'
-    # links:
+    links:
+    - db
     # - redis
-    # - db
-    # depends_on:
-    # - db
+    depends_on:
+    - db
   client:
     build:
       context: ${BASE_DIR}
