@@ -1,12 +1,12 @@
-package datastore
+package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type Database interface {
@@ -14,8 +14,11 @@ type Database interface {
 }
 
 type Datastore struct {
-	connection *sql.DB
-	users      *UserDBStore
+	connection *gorm.DB
+}
+
+type storeInstance struct {
+	conn *gorm.DB
 }
 
 const maxRetries = 5
@@ -43,13 +46,12 @@ func newDefaultDatastore() *Datastore {
 	}
 	datastore = &Datastore{
 		connection: conn,
-		users:      newUserStore(conn),
 	}
 	return datastore
 }
 
 // Connection returns a connection to the underlying database
-func connect() (*sql.DB, error) {
+func connect() (*gorm.DB, error) {
 	// TODO read credentials from file
 	// TODO accept multiple driver types
 
@@ -63,10 +65,8 @@ func connect() (*sql.DB, error) {
 	// sslmode=verify-full
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
-	log.Println(psqlInfo)
 
-	conn, _ := sql.Open("postgres", psqlInfo)
-	err := conn.Ping()
+	conn, err := gorm.Open("postgres", psqlInfo)
 
 	if conn == nil || err != nil {
 		if retries < maxRetries {
@@ -79,6 +79,6 @@ func connect() (*sql.DB, error) {
 			panic(err)
 		}
 	}
-	log.Println(conn, err)
+
 	return conn, nil
 }

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"hoopraapi/datastore"
+	db "hoopraapi/database"
 	"hoopraapi/models"
 
 	auth "hoopraapi/authorization"
@@ -15,7 +15,7 @@ import (
 func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
 	responder := models.NewHTTPResponder(w)
-	user := new(models.User)
+	user := new(db.User)
 
 	err := UnpackJSONBody(req, &user)
 	if err != nil {
@@ -28,7 +28,7 @@ func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	err = datastore.Users().Add(user)
+	err = db.Users.Add(user)
 	if err != nil {
 		responder.RespondWithError(err)
 		return
@@ -42,7 +42,7 @@ func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
 	responder := models.NewHTTPResponder(w)
-	user := new(models.User)
+	user := new(db.User)
 	err := UnpackJSONBody(req, &user)
 	if err != nil {
 		responder.RespondWithError(err)
@@ -54,14 +54,14 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	u := datastore.Users().SelectByName(user.Username)
+	u := db.Users.SelectByName(user.Username)
 	if u == nil {
 		// responder.RespondWithError(err)
 		responder.RespondWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	if auth.Authenticate(user) {
+	if auth.Authenticate(user.Username, user.Password) {
 		token, err := auth.IssueJWT(u.ID)
 		responder.RespondWithToken(token, err)
 		return
@@ -75,7 +75,7 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 func RefreshToken(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
 	responder := models.NewHTTPResponder(w)
-	user := new(models.User)
+	user := new(db.User)
 	UnpackJSONBody(req, &user)
 
 	// decoder := json.NewDecoder(req.Body)

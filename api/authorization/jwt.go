@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"hoopraapi/config"
-	"hoopraapi/datastore"
-	"hoopraapi/models"
+	db "hoopraapi/database"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -47,10 +46,8 @@ func GetIDFromToken(token *jwt.Token) (int, error) {
 
 // Authenticate returns true if a user exists
 // in the datastore
-func Authenticate(user *models.User) bool {
-
-	success := datastore.Users().Validate(user)
-	return success
+func Authenticate(username string, password string) bool {
+	return db.Users.Validate(username, password)
 }
 
 func validateToken(token *jwt.Token) bool {

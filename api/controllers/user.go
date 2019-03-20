@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	auth "hoopraapi/authorization"
-	"hoopraapi/datastore"
+	db "hoopraapi/database"
 	"hoopraapi/models"
 )
 
@@ -19,7 +19,7 @@ func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc)
 		return
 	}
 
-	user := new(models.User)
+	user := new(db.User)
 	err = UnpackJSONBody(req, &user)
 	if err != nil {
 		responder.RespondWithError(err)
@@ -32,7 +32,7 @@ func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc)
 		return
 	}
 
-	err = datastore.Users().UpdateName(id, user.Username)
+	err = db.Users.UpdateName(id, user.Username)
 
 	if err != nil {
 		responder.RespondWithError(err)
@@ -53,7 +53,7 @@ func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerF
 		return
 	}
 
-	user := new(models.User)
+	user := new(db.User)
 	err = UnpackJSONBody(req, &user)
 	if err != nil {
 		responder.RespondWithError(err)
@@ -66,7 +66,7 @@ func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerF
 		return
 	}
 
-	err = datastore.Users().UpdatePassword(id, user.Password)
+	err = db.Users.UpdatePassword(id, user.Password)
 
 	if err != nil {
 		responder.RespondWithError(err)

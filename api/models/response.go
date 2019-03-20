@@ -16,7 +16,7 @@ func NewHTTPResponder(w http.ResponseWriter) *HTTPResponder {
 }
 
 type accessTokenResponse struct {
-	Token string `json:"token" form:"token"`
+	Token string `json:"token"`
 }
 
 type textResponse struct {

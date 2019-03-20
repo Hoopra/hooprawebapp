@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"hoopraapi/config"
-	"hoopraapi/datastore"
+	db "hoopraapi/database"
 	"hoopraapi/routing"
 
 	"github.com/rs/cors"
@@ -17,7 +17,7 @@ func main() {
 	config.Init()
 
 	// Initialize datastore
-	datastore.Init()
+	db.Init()
 
 	// Create router
 	router, n := routing.GetRouting()
