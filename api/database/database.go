@@ -13,7 +13,7 @@ type Database interface {
 	Rollback()
 }
 
-type Datastore struct {
+type database struct {
 	connection *gorm.DB
 }
 
@@ -24,27 +24,28 @@ type storeInstance struct {
 const maxRetries = 5
 
 var (
-	retries   = 0
-	datastore *Datastore
+	retries    = 0
+	connecting = false
+	datastore  *database
 )
 
 func Init() {
-	datastore = newDefaultDatastore()
+	datastore = newDefaultDatabase()
 }
 
-func getDatastore() *Datastore {
+func getDatabase() *database {
 	if datastore == nil {
-		datastore = newDefaultDatastore()
+		datastore = newDefaultDatabase()
 	}
 	return datastore
 }
 
-func newDefaultDatastore() *Datastore {
+func newDefaultDatabase() *database {
 	conn, err := connect()
 	if err != nil {
 		panic("cannot connect to db")
 	}
-	datastore = &Datastore{
+	datastore = &database{
 		connection: conn,
 	}
 	return datastore
@@ -52,6 +53,7 @@ func newDefaultDatastore() *Datastore {
 
 // Connection returns a connection to the underlying database
 func connect() (*gorm.DB, error) {
+	connecting = true
 	// TODO read credentials from file
 	// TODO accept multiple driver types
 
@@ -62,6 +64,7 @@ func connect() (*gorm.DB, error) {
 		password = "hoophoop123!"
 		dbname   = "hoopra_dev"
 	)
+
 	// sslmode=verify-full
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
@@ -80,5 +83,6 @@ func connect() (*gorm.DB, error) {
 		}
 	}
 
+	connecting = false
 	return conn, nil
 }

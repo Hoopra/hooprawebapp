@@ -3,7 +3,13 @@ const { BASE_DIR, createDirectory, executeCommand, getArguments } = require('./l
 
 const args = getArguments(process);
 
-process.env.ENV = args.env || args.e || 'dev';
+process.env = {
+  ...process.env,
+  ENV: args.env || args.e || 'dev',
+  POSTGRES_PASSWORD: 'hoophoop123!',
+  POSTGRES_USER: 'hoopra',
+  POSTGRES_DB: 'hoopra_dev',
+}
 
 console.log('create log directory if not present');
 createDirectory(`${BASE_DIR}/log`);

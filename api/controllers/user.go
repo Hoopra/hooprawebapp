@@ -32,7 +32,7 @@ func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc)
 		return
 	}
 
-	err = db.Users.UpdateName(id, user.Username)
+	err = db.Users().UpdateName(id, user.Username)
 
 	if err != nil {
 		responder.RespondWithError(err)
@@ -66,7 +66,7 @@ func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerF
 		return
 	}
 
-	err = db.Users.UpdatePassword(id, user.Password)
+	err = db.Users().UpdatePassword(id, user.Password)
 
 	if err != nil {
 		responder.RespondWithError(err)

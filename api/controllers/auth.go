@@ -28,7 +28,7 @@ func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	err = db.Users.Add(user)
+	err = db.Users().Add(user)
 	if err != nil {
 		responder.RespondWithError(err)
 		return
@@ -54,7 +54,7 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	u := db.Users.SelectByName(user.Username)
+	u := db.Users().SelectByName(user.Username)
 	if u == nil {
 		// responder.RespondWithError(err)
 		responder.RespondWithStatus(http.StatusUnauthorized)

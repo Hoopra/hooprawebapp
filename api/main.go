@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"sync"
 
 	"hoopraapi/config"
 	db "hoopraapi/database"
@@ -13,11 +14,22 @@ import (
 
 func main() {
 
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	// Configure instance
-	config.Init()
+	go func() {
+		config.Init()
+		wg.Done()
+	}()
 
 	// Initialize datastore
-	db.Init()
+	go func() {
+		db.Init()
+		wg.Done()
+	}()
+
+	wg.Wait()
 
 	// Create router
 	router, n := routing.GetRouting()

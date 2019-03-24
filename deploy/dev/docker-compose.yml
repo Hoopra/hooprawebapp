@@ -3,9 +3,12 @@ services:
   db:
     build:
       context: ${BASE_DIR}/deploy/dev/db
-      # dockerfile: deploy/dev/api/Dockerfile
     ports:
     - '5432:5432'
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD : ${POSTGRES_PASSWORD}
   api:
     build:
       context: ${BASE_DIR}
@@ -14,6 +17,7 @@ services:
     - '8000:8000'
     volumes:
     - ${BASE_DIR}/api:/src/api
+    - ${GOROOT}:/go/
     environment:
       - ENVIRONMENT=${ENV}
     # logging:0
@@ -42,12 +46,18 @@ services:
   #     - '3306:3306'
     # volumes:
     #   - db-volume:/var/lib/mysql
-  # db-upgrade:
-  #   build: db-upgrade
-  #   links:
-  #     - db
-  #   volumes:
-  #     - ${BASE_DIR}/:/opt/actimo/main
+  db-migrate:
+    build: db-migrate
+    links:
+      - db
+    depends_on:
+      - db
+    volumes:
+      - ${BASE_DIR}/deploy/dev/db-migrate:/db-migrate
+    environment:
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD : ${POSTGRES_PASSWORD}
   # haproxy:
   #   build: haproxy
   #   links:

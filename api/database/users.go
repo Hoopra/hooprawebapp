@@ -19,22 +19,25 @@ type userstore interface {
 
 type User struct {
 	gorm.Model
-	ID       int    `gorm:"UNIQUE_INDEX; NOT NULL; AUTO_INCREMENT" json:"id"`
-	Username string `gorm:"type:VARCHAR(100); UNIQUE_INDEX; NOT NULL" json:"username"`
+	ID       int    `gorm:"UNIQUE_INDEX; PRIMARY_KEY; NOT NULL; AUTO_INCREMENT; default:NULL" json:"id"`
+	Username string `gorm:"type:VARCHAR(100); UNIQUE_INDEX; NOT NULL; default:NULL" json:"username"`
 	Password string `gorm:"-" json:"password"`
-	Hash     []byte `gorm:"NOT NULL" json:"password_hash"`
-	Email    string `gorm:"type:VARCHAR(100); INDEX" json:"email"`
+	Hash     []byte `gorm:"column:password_hash; NOT NULL; default:NULL" json:"password_hash"`
+	Email    string `gorm:"type:VARCHAR(100); INDEX; default:NULL" json:"email"`
 }
 
-var Users userstore = &storeInstance{
-	conn: getDatastore().connection,
+func Users() *storeInstance {
+	return &storeInstance{
+		conn: getDatabase().connection,
+	}
 }
 
 func (s *storeInstance) Add(user *User) error {
 
 	existing := s.SelectByName(user.Username)
 
-	if existing != nil {
+	var exists = (existing.Username != "" && existing.ID != 0)
+	if exists {
 		return errors.New("a user with that name already exists")
 	}
 
@@ -90,16 +93,7 @@ func (s *storeInstance) UpdatePassword(id int, newPassword string) error {
 func (s *storeInstance) SelectByName(name string) *User {
 
 	user := User{}
-	s.conn.Where("name = ?", name).First(&user)
-
-	// user := User{}
-	// row := s.conn.QueryRow(`SELECT id, name, password_hash FROM users WHERE name = $1`,
-	// 	name,
-	// )
-	// switch err := row.Scan(&user.ID, &user.Username, &user.Hash); err {
-	// case sql.ErrNoRows:
-	// 	return nil
-	// }
+	s.conn.Where("username = ?", name).First(&user)
 
 	return &user
 }
@@ -108,18 +102,6 @@ func (s *storeInstance) SelectByID(id int) *User {
 
 	user := User{ID: id}
 	s.conn.Where("id = ?", id).First(&user)
-
-	// row := s.conn.QueryRow(`SELECT name, password_hash FROM users WHERE id = $1`,
-	// 	id,
-	// )
-	// switch err := row.Scan(&user.Username, &user.Hash); err {
-	// case sql.ErrNoRows:
-	// 	fmt.Println("No rows were returned!")
-	// 	return nil
-	// case nil:
-	// default:
-	// 	panic(err)
-	// }
 
 	return &user
 }
