@@ -28,7 +28,8 @@ type User struct {
 
 func Users() *storeInstance {
 	return &storeInstance{
-		conn: getDatabase().connection,
+		conn:  getDatabase().connection,
+		table: "users",
 	}
 }
 
@@ -36,8 +37,7 @@ func (s *storeInstance) Add(user *User) error {
 
 	existing := s.SelectByName(user.Username)
 
-	var exists = (existing.Username != "" && existing.ID != 0)
-	if exists {
+	if existing != nil {
 		return errors.New("a user with that name already exists")
 	}
 
@@ -69,7 +69,7 @@ func (s *storeInstance) Validate(username string, password string) bool {
 
 func (s *storeInstance) UpdateName(id int, newName string) error {
 
-	user := s.SelectByID(id)
+	user := s.SelectByID(id).(User)
 	user.Username = newName
 	s.conn.Save(&user)
 
@@ -83,7 +83,7 @@ func (s *storeInstance) UpdatePassword(id int, newPassword string) error {
 		return err
 	}
 
-	user := s.SelectByID(id)
+	user := s.SelectByID(id).(User)
 	user.Hash = hash
 	s.conn.Save(&user)
 
@@ -91,17 +91,17 @@ func (s *storeInstance) UpdatePassword(id int, newPassword string) error {
 }
 
 func (s *storeInstance) SelectByName(name string) *User {
-
-	user := User{}
-	s.conn.Where("username = ?", name).First(&user)
-
+	user := s.SelectBy(map[string]interface{}{"username": name}).(User)
 	return &user
 }
 
-func (s *storeInstance) SelectByID(id int) *User {
+// func (s *storeInstance) SelectByID(id int) *User {
 
-	user := User{ID: id}
-	s.conn.Where("id = ?", id).First(&user)
+// 	user := User{ID: id}
+// 	s.conn.Where("id = ?", id).First(&user)
+// 	if user.Username == "" || user.ID == 0 {
+// 		return nil
+// 	}
 
-	return &user
-}
+// 	return &user
+// }

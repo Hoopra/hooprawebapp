@@ -9,8 +9,9 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-type Database interface {
-	Rollback()
+type databaseSelect interface {
+	SelectById(id int)
+	SelectBy(property string, value interface{})
 }
 
 type database struct {
@@ -18,7 +19,8 @@ type database struct {
 }
 
 type storeInstance struct {
-	conn *gorm.DB
+	table string
+	conn  *gorm.DB
 }
 
 const maxRetries = 5
@@ -85,4 +87,19 @@ func connect() (*gorm.DB, error) {
 
 	connecting = false
 	return conn, nil
+}
+
+func (s *storeInstance) SelectBy(findMap map[string]interface{}) interface{} {
+
+	var model interface{}
+	err := s.conn.Where(findMap, (*gorm.DB).Table(s.conn, s.table)).First(&model)
+	if err != nil {
+		return nil
+	}
+
+	return &model
+}
+
+func (s *storeInstance) SelectByID(id int) interface{} {
+	return s.SelectBy(map[string]interface{}{"id": id})
 }

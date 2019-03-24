@@ -13,10 +13,11 @@ var domain = "http://localhost:8000"
 var token1 = ""
 var username = "Thomas"
 var password = "Langtkodeord22"
+var email = "thomas@gmail.com"
 
 func main() {
 
-	register(username, password)
+	register(username, password, email)
 
 	login(username, password)
 
@@ -64,10 +65,10 @@ func login(username string, password string) {
 	}
 }
 
-func register(username string, password string) {
+func register(username string, password string, email string) {
 
 	println("\nRegister user", username, "with password", password)
-	body := map[string]string{"username": username, "password": password}
+	body := map[string]string{"username": username, "password": password, "email": email}
 	req := createRequestWithJSONBody("POST", "/register", body, false)
 
 	resp := sendRequest(req)
