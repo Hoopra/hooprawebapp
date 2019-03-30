@@ -7,12 +7,26 @@ import (
 	db "hoopraapi/database"
 	"hoopraapi/models"
 
-	auth "hoopraapi/authorization"
+	auth "hoopraapi/auth"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 )
+
+func RegisterAuthRoutes(r *mux.Router) *mux.Router {
+	s := r.PathPrefix("").Subrouter()
+
+	s.HandleFunc("/register", register).Methods("POST")
+	s.HandleFunc("/login", login).Methods("POST")
+	s.HandleFunc("/refresh", refreshToken).Methods("POST")
+	s.HandleFunc("/logout", logout).Methods("GET")
+
+	return s
+}
 
 // Register adds a user to the datastore if one
 // was supplied in the request
-func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func register(w http.ResponseWriter, req *http.Request) {
 
 	responder := models.NewHTTPResponder(w)
 	user := new(db.User)
@@ -39,7 +53,7 @@ func Register(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
 // Login issues a JWT if the user in the request
 // can be validated in the datastore
-func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func login(w http.ResponseWriter, req *http.Request) {
 
 	responder := models.NewHTTPResponder(w)
 	user := new(db.User)
@@ -54,14 +68,15 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		return
 	}
 
-	u := db.Users().SelectByName(user.Username)
+	_, u := db.Users().SelectByName(user.Username)
 	if u == nil {
 		// responder.RespondWithError(err)
 		responder.RespondWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	if auth.Authenticate(user.Username, user.Password) {
+	valid := db.Users().Validate(user.Username, user.Password)
+	if valid {
 		token, err := auth.IssueJWT(u.ID)
 		responder.RespondWithToken(token, err)
 		return
@@ -72,7 +87,7 @@ func Login(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
 // RefreshToken issues a new JWT if the request
 // already contains a valid one
-func RefreshToken(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func refreshToken(w http.ResponseWriter, req *http.Request) {
 
 	responder := models.NewHTTPResponder(w)
 	user := new(db.User)
@@ -91,12 +106,12 @@ func RefreshToken(w http.ResponseWriter, req *http.Request, next http.HandlerFun
 }
 
 // Logout invalidates a refresh token. Dummy function for now
-func Logout(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func logout(w http.ResponseWriter, req *http.Request) {
 
 	responder := models.NewHTTPResponder(w)
-	_, err := auth.GetTokenFromRequest(req)
-	if err != nil {
-		responder.RespondWithStatus(http.StatusInternalServerError)
+	token := context.Get(req, "token")
+	if token == nil {
+		responder.RespondWithStatus(http.StatusUnauthorized)
 	}
 
 	responder.RespondWithStatus(http.StatusOK)

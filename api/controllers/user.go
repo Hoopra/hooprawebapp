@@ -3,36 +3,41 @@ package controllers
 import (
 	"net/http"
 
-	auth "hoopraapi/authorization"
 	db "hoopraapi/database"
 	"hoopraapi/models"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 )
 
+func RegisterUserRoutes(r *mux.Router) *mux.Router {
+	s := r.PathPrefix("/user").Subrouter()
+
+	s.HandleFunc("/", updateUser).Methods("PUT")
+	// route{"Update Name", "POST", "/update/name", controllers.UpdateName, true},
+	// route{"Update Password", "POST", "/update/password", controllers.UpdatePassword, true},
+	return s
+}
+
 // UpdateName changes the name of a user in the datastore
-func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func updateUser(w http.ResponseWriter, req *http.Request) {
 
 	responder := models.NewHTTPResponder(w)
-	token, err := auth.GetTokenFromRequest(req)
 
-	if err != nil {
+	type jsonBody struct{ Username string }
+	body := context.Get(req, "body")
+	if body == nil {
+		responder.RespondWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	id := context.Get(req, "id")
+	if id == nil {
 		responder.RespondWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	user := new(db.User)
-	err = UnpackJSONBody(req, &user)
-	if err != nil {
-		responder.RespondWithError(err)
-		return
-	}
-
-	id, err := auth.GetIDFromToken(token)
-	if err != nil {
-		responder.RespondWithError(err)
-		return
-	}
-
-	err = db.Users().UpdateName(id, user.Username)
+	err := db.Users().UpdateName(id.(int), body.(jsonBody).Username)
 
 	if err != nil {
 		responder.RespondWithError(err)
@@ -42,36 +47,29 @@ func UpdateName(w http.ResponseWriter, req *http.Request, next http.HandlerFunc)
 	responder.RespondWithStatus(http.StatusOK)
 }
 
-// UpdatePassword changes the password (hash) of a user in the datastore
-func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+// // UpdatePassword changes the password (hash) of a user in the datastore
+// func UpdatePassword(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 
-	responder := models.NewHTTPResponder(w)
-	token, err := auth.GetTokenFromRequest(req)
+// 	responder := models.NewHTTPResponder(w)
 
-	if err != nil {
-		responder.RespondWithStatus(http.StatusUnauthorized)
-		return
-	}
+// 	type jsonBody struct{ Password string }
+// 	body := context.Get(req, "body")
+// 	if body == nil {
+// 		responder.RespondWithStatus(http.StatusBadRequest)
+// 		return
+// 	}
 
-	user := new(db.User)
-	err = UnpackJSONBody(req, &user)
-	if err != nil {
-		responder.RespondWithError(err)
-		return
-	}
+// 	id := context.Get(req, "id")
+// 	if id == nil {
+// 		responder.RespondWithStatus(http.StatusUnauthorized)
+// 		return
+// 	}
+// 	err := db.Users().UpdatePassword(id.(int), body.(jsonBody).Password)
 
-	id, err := auth.GetIDFromToken(token)
-	if err != nil {
-		responder.RespondWithError(err)
-		return
-	}
+// 	if err != nil {
+// 		responder.RespondWithError(err)
+// 		return
+// 	}
 
-	err = db.Users().UpdatePassword(id, user.Password)
-
-	if err != nil {
-		responder.RespondWithError(err)
-		return
-	}
-
-	responder.RespondWithStatus(http.StatusOK)
-}
+// 	responder.RespondWithStatus(http.StatusOK)
+// }

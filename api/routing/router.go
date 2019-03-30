@@ -1,7 +1,7 @@
 package routing
 
 import (
-	"hoopraapi/authorization"
+	"hoopraapi/controllers"
 
 	"github.com/gorilla/mux"
 	negroni "gopkg.in/codegangsta/negroni.v0"
@@ -19,25 +19,26 @@ type route struct {
 // for this server
 func GetRouting() (*mux.Router, *negroni.Negroni) {
 
-	router := newRouter(Routes)
-	return router, negroni.Classic()
-}
+	// router := newRouter()
+	// return router, negroni.Classic()
+	r := mux.NewRouter()
 
-func newRouter(routes []route) *mux.Router {
+	controllers.RegisterAuthRoutes(r)
+	controllers.RegisterUserRoutes(r)
+	// for _, route := range routes {
 
-	router := mux.NewRouter()
-	for _, route := range routes {
+	// 	handler := negroni.New(negroni.HandlerFunc(route.HandlerFunc))
+	// 	if route.Secure {
+	// 		handler = negroni.New(
+	// 			negroni.HandlerFunc(auth.RequireTokenAuthentication),
+	// 			negroni.HandlerFunc(unpackHTTPBody),
+	// 			negroni.HandlerFunc(route.HandlerFunc),
+	// 		)
+	// 	}
 
-		handler := negroni.New(negroni.HandlerFunc(route.HandlerFunc))
-		if route.Secure {
-			handler = negroni.New(
-				negroni.HandlerFunc(authorization.RequireTokenAuthentication),
-				negroni.HandlerFunc(route.HandlerFunc),
-			)
-		}
+	// 	// router.Use(unpackHTTPBody)
+	// 	router.Handle(route.Pattern, handler).Methods(route.Method).Name(route.Name)
+	// }
 
-		router.Handle(route.Pattern, handler).Methods(route.Method).Name(route.Name)
-	}
-
-	return router
+	return r, negroni.Classic()
 }
