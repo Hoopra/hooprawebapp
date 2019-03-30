@@ -19,26 +19,13 @@ type route struct {
 // for this server
 func GetRouting() (*mux.Router, *negroni.Negroni) {
 
-	// router := newRouter()
-	// return router, negroni.Classic()
 	r := mux.NewRouter()
 
 	controllers.RegisterAuthRoutes(r)
 	controllers.RegisterUserRoutes(r)
-	// for _, route := range routes {
 
-	// 	handler := negroni.New(negroni.HandlerFunc(route.HandlerFunc))
-	// 	if route.Secure {
-	// 		handler = negroni.New(
-	// 			negroni.HandlerFunc(auth.RequireTokenAuthentication),
-	// 			negroni.HandlerFunc(unpackHTTPBody),
-	// 			negroni.HandlerFunc(route.HandlerFunc),
-	// 		)
-	// 	}
-
-	// 	// router.Use(unpackHTTPBody)
-	// 	router.Handle(route.Pattern, handler).Methods(route.Method).Name(route.Name)
-	// }
+	// s.Use(auth.PrintHeaders)
+	r.Use(unpackJSONBody)
 
 	return r, negroni.Classic()
 }
