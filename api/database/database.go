@@ -5,22 +5,27 @@ import (
 	"log"
 	"time"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	// "github.com/jinzhu/gorm"
+	// _ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-type databaseSelect interface {
-	SelectById(id int)
-	SelectBy(property string, value interface{})
-}
-
 type database struct {
-	connection *gorm.DB
+	// connection *gorm.DB
+	connection *sqlx.DB
 }
 
 type storeInstance struct {
 	table string
-	conn  *gorm.DB
+	conn  *sqlx.DB
+}
+
+type storeEntry struct {
+	ID        uint       `db:"id" json:"id"`
+	CreatedAt *time.Time `db:"created_at" json:"created_at"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
+	UpdatedAt *time.Time `db:"updated_at" json:"updated_at"`
 }
 
 const maxRetries = 5
@@ -54,7 +59,7 @@ func newDefaultDatabase() *database {
 }
 
 // Connection returns a connection to the underlying database
-func connect() (*gorm.DB, error) {
+func connect() (*sqlx.DB, error) {
 	connecting = true
 	// TODO read credentials from file
 	// TODO accept multiple driver types
@@ -71,7 +76,8 @@ func connect() (*gorm.DB, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	conn, err := gorm.Open("postgres", psqlInfo)
+	conn, err := sqlx.Connect("postgres", psqlInfo)
+	// conn, err := gorm.Open("postgres", psqlInfo)
 
 	if conn == nil || err != nil {
 		if retries < maxRetries {
@@ -87,19 +93,4 @@ func connect() (*gorm.DB, error) {
 
 	connecting = false
 	return conn, nil
-}
-
-func (s *storeInstance) SelectBy(findMap map[string]interface{}) interface{} {
-
-	var model interface{}
-	err := s.conn.Where(findMap, (*gorm.DB).Table(s.conn, s.table)).First(&model)
-	if err != nil {
-		return nil
-	}
-
-	return &model
-}
-
-func (s *storeInstance) SelectByID(id int) interface{} {
-	return s.SelectBy(map[string]interface{}{"id": id})
 }

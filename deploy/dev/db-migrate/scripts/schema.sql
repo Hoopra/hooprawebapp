@@ -5,8 +5,8 @@
 -----------------
 CREATE TABLE IF NOT EXISTS users (
   id bigserial NOT NULL,
-  username varchar(100) NOT NULL,
-  email varchar(255) NOT NULL,
+  username varchar(100) NOT NULL UNIQUE ,
+  email varchar(255) NOT NULL UNIQUE,
   password_hash varchar(255) NOT NULL,
   created_at timestamp,
   deleted_at timestamp,
