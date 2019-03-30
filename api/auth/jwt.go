@@ -1,17 +1,17 @@
-package authorization
+package auth
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
 	"hoopraapi/config"
-	db "hoopraapi/database"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // IssueJWT returns a JWT signed by this server
-func IssueJWT(id int) (string, error) {
+func IssueJWT(id uint) (string, error) {
 
 	keyInstance := config.GetJWTKeyPair()
 	token := jwt.New(jwt.SigningMethodRS512)
@@ -19,7 +19,7 @@ func IssueJWT(id int) (string, error) {
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(config.Get().ExpireDelta)).Unix()
 	claims["iat"] = time.Now().Unix()
-	claims["sub"] = strconv.Itoa(id)
+	claims["sub"] = fmt.Sprint(id)
 	claims["iss"] = config.Get().Issuer
 	token.Claims = claims
 
@@ -30,9 +30,9 @@ func IssueJWT(id int) (string, error) {
 	return tokenString, nil
 }
 
-// GetIDFromToken returns the id of the user
+// getIDFromToken returns the id of the user
 // for which a token was issued
-func GetIDFromToken(token *jwt.Token) (int, error) {
+func getIDFromToken(token *jwt.Token) (int, error) {
 
 	claims := token.Claims.(jwt.MapClaims)
 	idString := claims["sub"].(string)
@@ -46,9 +46,9 @@ func GetIDFromToken(token *jwt.Token) (int, error) {
 
 // Authenticate returns true if a user exists
 // in the datastore
-func Authenticate(username string, password string) bool {
-	return db.Users().Validate(username, password)
-}
+// func Authenticate(username string, password string) bool {
+// 	return db.Users().Validate(username, password)
+// }
 
 func validateToken(token *jwt.Token) bool {
 

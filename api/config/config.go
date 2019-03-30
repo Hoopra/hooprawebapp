@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -20,6 +20,7 @@ type Config struct {
 	ExpireDelta    int
 	Issuer         string
 	Env            string
+	Port           int
 }
 
 var config = Config{}
@@ -35,14 +36,15 @@ func Init() {
 
 	// fmt.Printf("Threads: %v\n", runtime.GOMAXPROCS(-1))
 
-	content, err := ioutil.ReadFile(environments[env])
+	err := readConfig("dev", &config)
 	if err != nil {
-		fmt.Println("error while reading config file", err)
+		panic(err)
 	}
-
-	jsonErr := json.Unmarshal(content, &config)
-	if jsonErr != nil {
-		fmt.Println("error while parsing config file", jsonErr)
+	if env != "dev" {
+		err := readConfig(env, &config)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	priOvr := os.Getenv("AUTH_PRIVATE_KEY_PATH")
@@ -55,6 +57,19 @@ func Init() {
 	}
 
 	config.Env = env
+}
+
+func readConfig(env string, config *Config) error {
+	content, err := ioutil.ReadFile(environments[env])
+	if err != nil {
+		return errors.New("error while reading config file: " + err.Error())
+	}
+
+	jsonErr := json.Unmarshal(content, &config)
+	if jsonErr != nil {
+		return errors.New("error while parsing config file: " + err.Error())
+	}
+	return nil
 }
 
 // Get returns the current config settings

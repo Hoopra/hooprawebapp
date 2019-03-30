@@ -2,5 +2,6 @@
   "PrivateKeyPath": "/config/keys/private_key",
   "PublicKeyPath": "/config/keys/public_key.pub",
   "ExpireDelta": 72,
-  "Issuer": "hoopra.com"
+  "Issuer": "hoopra.com",
+  "Port": 8000
 }
