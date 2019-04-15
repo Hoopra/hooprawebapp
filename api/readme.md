@@ -19,7 +19,12 @@ AUTH_PUBLIC_KEY_PATH={key to public key}
 ... go/src/hoopraapi/go run *.go -race
 
 
-----------------
--- Run tests  --
-----------------
-... go/src/hoopraapi/test/go run test.go
+-------------------
+-- Run e2e tests --
+-------------------
+... go run test/e2e.go
+
+--------------------
+-- Run unit tests --
+--------------------
+... go test -v ./...

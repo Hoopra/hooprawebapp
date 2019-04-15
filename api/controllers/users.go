@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"hoopraapi/auth"
 	db "hoopraapi/database"
 	"hoopraapi/models"
 
@@ -13,10 +14,17 @@ import (
 func RegisterUserRoutes(r *mux.Router) *mux.Router {
 	s := r.PathPrefix("/user").Subrouter()
 
+	s.Use(auth.RequireTokenAuthentication)
+	s.HandleFunc("/", getUser).Methods("GET")
 	s.HandleFunc("/", updateUser).Methods("PUT")
-	// route{"Update Name", "POST", "/update/name", controllers.UpdateName, true},
-	// route{"Update Password", "POST", "/update/password", controllers.UpdatePassword, true},
 	return s
+}
+
+// UpdateName changes the name of a user in the datastore
+func getUser(w http.ResponseWriter, req *http.Request) {
+
+	responder := models.NewHTTPResponder(w)
+	responder.RespondWithStatus(http.StatusOK)
 }
 
 // UpdateName changes the name of a user in the datastore

@@ -1,36 +1,15 @@
 package database
 
-import (
-	"fmt"
-)
+import "hoopraapi/util"
 
 type databaseSelect interface {
 	SelectById(id int)
 	SelectBy(findMap map[string]interface{})
 }
 
-func selectQuery(findMap map[string]interface{}, table string) string {
-	query := "SELECT * FROM " + table + " WHERE "
-	toAdd := len(findMap)
-	for key, value := range findMap {
-		query = query + key + "="
-		switch value.(type) {
-		case string:
-			query = query + "'" + value.(string) + "'"
-		default:
-			query = query + "" + fmt.Sprintf("%v", value) + ""
-		}
-		toAdd--
-		if toAdd > 0 {
-			query = query + " AND "
-		}
-	}
-	return query
-}
-
 func (s *storeInstance) SelectBy(findMap map[string]interface{}, model interface{}) error {
 
-	query := selectQuery(findMap, s.table)
+	query := util.Go2SQL.SelectQuery(s.table, findMap)
 	rows, err := s.conn.Queryx(query)
 	if err != nil {
 		return err

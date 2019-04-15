@@ -7,8 +7,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	// "github.com/jinzhu/gorm"
-	// _ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type database struct {
@@ -19,13 +17,6 @@ type database struct {
 type storeInstance struct {
 	table string
 	conn  *sqlx.DB
-}
-
-type storeEntry struct {
-	ID        uint       `db:"id" json:"id"`
-	CreatedAt *time.Time `db:"created_at" json:"created_at"`
-	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
-	UpdatedAt *time.Time `db:"updated_at" json:"updated_at"`
 }
 
 const maxRetries = 5

@@ -6,7 +6,7 @@ import (
 
 	"hoopraapi/config"
 	"hoopraapi/models"
-	"hoopraapi/utils"
+	"hoopraapi/util"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
@@ -15,7 +15,7 @@ import (
 
 func PrintHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.DescribeRequest(r)
+		util.DescribeRequest(r)
 		next.ServeHTTP(w, r)
 	})
 }

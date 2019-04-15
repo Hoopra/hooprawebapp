@@ -8,8 +8,6 @@ import (
 	"hoopraapi/config"
 	db "hoopraapi/database"
 	"hoopraapi/routing"
-
-	"github.com/rs/cors"
 )
 
 func main() {
@@ -32,21 +30,9 @@ func main() {
 	wg.Wait()
 
 	// Create router
-	router, n := routing.GetRouting()
-
-	corsOpts := cors.Options{}
-	corsOpts.AllowCredentials = true
-	corsOpts.AllowedOrigins = []string{"*"}
-	corsOpts.AllowedHeaders = []string{"Origin", "Content-Type", "Authorization"}
-
-	handler := cors.New(corsOpts).Handler(router)
-	n.UseHandler(handler)
+	_, n := routing.GetRouting()
 
 	// Run server
 	log.Print("Listening on " + routing.Port)
 	http.ListenAndServe(routing.Port, n)
-}
-
-func corsHandler() {
-
 }
