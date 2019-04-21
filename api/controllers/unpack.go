@@ -1,23 +1,28 @@
 package controllers
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
+	"errors"
+	"fmt"
+
+	"hoopraapi/util"
 )
 
-// UnpackJSONBody unpacks JSON from req.Body to an interface
-func UnpackJSONBody(req *http.Request, in interface{}) error {
-
-	body, err := ioutil.ReadAll(req.Body)
+func ValidateAndScan(in map[string]interface{}, out interface{}) error {
+	err := validate(in, out)
 	if err != nil {
 		return err
 	}
+	return util.Object.CopyProperties(in, &out)
+}
 
-	err = json.Unmarshal(body, in)
+func validate(in map[string]interface{}, out interface{}) error {
+	err, missing := util.Object.Diff(in, out)
 	if err != nil {
 		return err
 	}
-
+	if len(missing) > 0 {
+		message := fmt.Sprintf("the following parameters are missing in input: %v", missing)
+		return errors.New(message)
+	}
 	return nil
 }

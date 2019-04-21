@@ -7,9 +7,12 @@ type databaseSelect interface {
 	SelectBy(findMap map[string]interface{})
 }
 
-func (s *storeInstance) SelectBy(findMap map[string]interface{}, model interface{}) error {
+func (s *storeInstance) SelectBy(findMap interface{}, model interface{}) error {
 
-	query := util.Go2SQL.SelectQuery(s.table, findMap)
+	err, query := util.Go2SQL.SelectQuery(s.table, findMap)
+	if err != nil {
+		return err
+	}
 	rows, err := s.conn.Queryx(query)
 	if err != nil {
 		return err

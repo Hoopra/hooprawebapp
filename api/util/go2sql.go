@@ -8,27 +8,42 @@ type go2sqlTranslator struct{}
 
 var Go2SQL = &go2sqlTranslator{}
 
-func (*go2sqlTranslator) InsertQuery(table string, model map[string]interface{}) string {
-	keys, values := Go2SQL.ArgumentList(model)
+func (*go2sqlTranslator) InsertQuery(table string, model interface{}) (error, string) {
+	err, keys, values := Go2SQL.ArgumentList(model)
+	if err != nil {
+		return err, ""
+	}
 	query := fmt.Sprintf("INSERT INTO %v %v VALUES %v;", table, keys, values)
-	return query
+	return nil, query
 }
 
-func (*go2sqlTranslator) SelectQuery(table string, where map[string]interface{}) string {
-	return fmt.Sprintf("SELECT * FROM %v WHERE %v;", table, Go2SQL.Where(where))
+func (*go2sqlTranslator) SelectQuery(table string, where interface{}) (error, string) {
+	err, whereQuery := Go2SQL.Where(where)
+	if err != nil {
+		return err, ""
+	}
+	return nil, fmt.Sprintf("SELECT * FROM %v WHERE %v;", table, whereQuery)
 }
 
-func (*go2sqlTranslator) UpdateQuery(table string, setMap map[string]interface{}, whereMap map[string]interface{}) string {
-	updates := Go2SQL.SetAll(setMap)
-	where := Go2SQL.Where(whereMap)
-	query := fmt.Sprintf("UPDATE %v SET %v WHERE %v;", table, updates, where)
-	return query
+func (*go2sqlTranslator) UpdateQuery(table string, setMap interface{}, whereMap interface{}) (error, string) {
+	err, updates := Go2SQL.SetAll(setMap)
+	if err != nil {
+		return err, ""
+	}
+	err, where := Go2SQL.Where(whereMap)
+	if err != nil {
+		return err, ""
+	}
+	return nil, fmt.Sprintf("UPDATE %v SET %v WHERE %v;", table, updates, where)
 }
 
-func (*go2sqlTranslator) DeleteQuery(table string, whereMap map[string]interface{}) string {
-	where := Go2SQL.Where(whereMap)
+func (*go2sqlTranslator) DeleteQuery(table string, whereMap interface{}) (error, string) {
+	err, where := Go2SQL.Where(whereMap)
+	if err != nil {
+		return err, ""
+	}
 	query := fmt.Sprintf("DELETE FROM %v WHERE %v;", table, where)
-	return query
+	return nil, query
 }
 
 func (*go2sqlTranslator) Value(v interface{}) string {
@@ -43,10 +58,15 @@ func (*go2sqlTranslator) Value(v interface{}) string {
 	}
 }
 
-func (*go2sqlTranslator) Where(where map[string]interface{}) string {
+func (*go2sqlTranslator) Where(where interface{}) (error, string) {
 	query := ""
-	i, target := 0, len(where)-1
-	for k, v := range where {
+	m := map[string]interface{}{}
+	err := Object.CopyProperties(where, &m)
+	if err != nil {
+		return err, query
+	}
+	i, target := 0, len(m)-1
+	for k, v := range m {
 		if Object.IsZero(v) {
 			query += fmt.Sprintf("%v IS NULL", k)
 		} else {
@@ -58,13 +78,21 @@ func (*go2sqlTranslator) Where(where map[string]interface{}) string {
 		}
 		i++
 	}
-	return query
+	return nil, query
 }
 
-func (*go2sqlTranslator) ArgumentList(args map[string]interface{}) (string, string) {
+func (*go2sqlTranslator) ArgumentList(args interface{}) (error, string, string) {
+	if Object.IsArray(args) {
+		return Go2SQL.argumentListMultiple(args)
+	}
+	m := map[string]interface{}{}
+	err := Object.CopyProperties(args, &m)
+	if err != nil {
+		return err, "", ""
+	}
 	keys, values := "(", "("
-	i, target := 0, len(args)
-	for k, v := range args {
+	i, target := 0, len(m)
+	for k, v := range m {
 		v := Go2SQL.Value(v)
 		if i != 0 && i != target {
 			keys, values = keys+",", values+","
@@ -74,13 +102,70 @@ func (*go2sqlTranslator) ArgumentList(args map[string]interface{}) (string, stri
 		i++
 	}
 	keys, values = keys+")", values+")"
-	return keys, values
+	return nil, keys, values
 }
 
-func (*go2sqlTranslator) SetAll(set map[string]interface{}) string {
+func (*go2sqlTranslator) argumentListMultiple(args interface{}) (error, string, string) {
+	var columns []string
+	model := args.([]map[string]interface{})
+	for _, v := range model {
+		err, mKeys := Object.KeysOf(v)
+		if err != nil {
+			return err, "", ""
+		}
+		for _, key := range mKeys {
+			if !Object.Contains(columns, key) {
+				columns = append(columns, key)
+			}
+		}
+	}
+	keys := "("
+	target := len(columns)
+	for i, k := range columns {
+		if i != 0 && i != target {
+			keys += ","
+		}
+		keys += fmt.Sprintf("%v", k)
+	}
+	keys += ")"
+
+	values := ""
+	inserts := len(model)
+	for index, v := range model {
+		m := map[string]interface{}{}
+		err := Object.CopyProperties(v, &m)
+		if err != nil {
+			return err, "", ""
+		}
+
+		values += "("
+		for i, k := range columns {
+			v := Go2SQL.Value(m[k])
+			if i != 0 && i != target {
+				values += ","
+			}
+			values += fmt.Sprintf("%v", v)
+			if i == target-1 {
+				values += ")"
+			}
+		}
+		if index != inserts-1 {
+			values += ","
+		}
+	}
+	return nil, keys, values
+}
+
+func (*go2sqlTranslator) SetAll(set interface{}) (error, string) {
 	query := ""
-	i, target := 0, len(set)
-	for k, v := range set {
+	m := map[string]interface{}{}
+	err := Object.CopyProperties(set, &m)
+	if err != nil {
+		return err, query
+	}
+
+	i, target := 0, len(m)
+	for k, v := range m {
 		if i != 0 && i != target {
 			query += ","
 		}
@@ -88,5 +173,5 @@ func (*go2sqlTranslator) SetAll(set map[string]interface{}) string {
 		query += fmt.Sprintf("%v=%v", k, v)
 		i++
 	}
-	return query
+	return nil, query
 }

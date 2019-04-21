@@ -4,8 +4,11 @@ import (
 	"hoopraapi/util"
 )
 
-func (s *storeInstance) Update(set map[string]interface{}, where map[string]interface{}) error {
-	query := util.Go2SQL.UpdateQuery(s.table, set, where)
-	_, err := s.conn.Exec(query)
+func (s *storeInstance) Update(set interface{}, where interface{}) error {
+	err, query := util.Go2SQL.UpdateQuery(s.table, set, where)
+	if err != nil {
+		return err
+	}
+	_, err = s.conn.Exec(query)
 	return err
 }
